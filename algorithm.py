@@ -1,6 +1,6 @@
 # Functions to design testing matrices, compute test outcomes, and decode infection vectors
 
-def independent_testing(n, num_tests):
+def independent_testing(n, num_tests, testing_prob):
     """
     Create testing matrix X^{nxnum_tests} based on independent coding
     parameters:
@@ -8,6 +8,8 @@ def independent_testing(n, num_tests):
         The number of individuals
     num_tests: int
         The number of tests to perform
+    testing_prob: float
+        The probability of including an individual in a test    
     """    
     return testing_matrix
 
@@ -35,7 +37,7 @@ def compute_test_outcomes(infection_vector, testing_matrix):
     """
     return test_outcomes
 
-def decoding(test_outcomes, testing_matrix):
+def decoding(test_outcomes, testing_matrix, threshold):
     """
     Decode the infection vector from the test outcomes and testing matrix
     parameters:
@@ -43,5 +45,7 @@ def decoding(test_outcomes, testing_matrix):
         The test outcomes of 0's and 1's
     testing_matrix: array-like of shape (n, num_tests)
         The testing matrix of 0's and 1's
+    threshold: int
+        The threshold for decoding
     """
     return decoded_infection_vector
