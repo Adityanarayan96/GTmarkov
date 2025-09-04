@@ -2,8 +2,6 @@
 
 import numpy as np
 
-import numpy as np
-
 def simulate_markov(n, alpha, beta, seed=None):
     """
     Simulate an infection vector U^n from a 2-state Markov chain
