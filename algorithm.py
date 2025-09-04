@@ -43,13 +43,31 @@ def block_testing(n, num_tests, block_size):
 
 def compute_test_outcomes(infection_vector, testing_matrix):
     """
-    Compute the test outcomes Y^{num_tests} based on the infection vector and testing matrix
-    parameters:
-    infection_vector: array-like of shape (n,)
-        The infection vector of 0's and 1's
-    testing_matrix: array-like of shape (n, num_tests)
-        The testing matrix of 0's and 1's
+    Compute the test outcomes Y^{num_tests} based on the infection vector and testing matrix.
+
+    A test outcome is 1 if at least one infected individual is included in the test.
+
+    Parameters
+    ----------
+    infection_vector : array-like of shape (n,)
+        The infection vector of 0's and 1's.
+    testing_matrix : array-like of shape (n, num_tests)
+        The testing matrix of 0's and 1's.
+
+    Returns
+    -------
+    test_outcomes : np.ndarray of shape (num_tests,)
+        Binary test outcomes.
     """
+    infection_vector = np.asarray(infection_vector, dtype=int)
+    testing_matrix = np.asarray(testing_matrix, dtype=int)
+
+    # Matrix multiplication gives counts of infected individuals in each test
+    infected_counts = infection_vector @ testing_matrix  
+
+    # Convert counts to binary outcomes
+    test_outcomes = (infected_counts > 0).astype(int)
+
     return test_outcomes
 
 def decoding(test_outcomes, testing_matrix, threshold):
