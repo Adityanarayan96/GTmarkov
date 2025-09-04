@@ -2,55 +2,48 @@
 
 import numpy as np
 
-def simulate_markov(n, transition_matrix, random_state=None):
-    """
-    Simulate an infection vector U^n ∈ {0,1}^n from a 2-state Markov chain.
+import numpy as np
 
+def simulate_markov(n, alpha, beta, seed=None):
+    """
+    Simulate an infection vector U^n from a 2-state Markov chain
+    with transition probabilities:
+        P(0->1) = alpha, P(0->0) = 1-alpha
+        P(1->0) = beta,  P(1->1) = 1-beta
+    
     Parameters
     ----------
     n : int
-        Length of the sequence to simulate (n >= 1).
-    transition_matrix : array-like of shape (2, 2)
-        Row-stochastic matrix P where P[i, j] = P(X_{t+1}=j | X_t=i).
-        Rows must be nonnegative and (approximately) sum to 1.
-    random_state : int or np.random.Generator, optional
-        Seed or Generator for reproducibility.
-
+        Length of the sequence to simulate.
+    alpha : float
+        Transition probability from 0 to 1.
+    beta : float
+        Transition probability from 1 to 0.
+    seed : int or None
+        Random seed for reproducibility.
+    
     Returns
     -------
-    U : np.ndarray of shape (n,), dtype=int
-        Simulated 0/1 infection vector.
-    pi : np.ndarray of shape (2,)
-        Stationary distribution used for the initial state.
+    U : np.ndarray
+        Infection vector of length n with entries in {0,1}.
+    pi : tuple
+        Stationary distribution (pi0, pi1).
     """
-    P = np.asarray(transition_matrix, dtype=float)
-    if P.shape != (2, 2):
-        raise ValueError("transition_matrix must be 2x2.")
-    if np.any(P < -1e-12):
-        raise ValueError("transition_matrix must be nonnegative.")
-    if not np.allclose(P.sum(axis=1), 1.0, atol=1e-10):
-        raise ValueError("Each row of transition_matrix must sum to 1.")
+    rng = np.random.default_rng(seed)
 
-    # RNG setup
-    rng = (np.random.default_rng(random_state) if not isinstance(random_state, np.random.Generator)
-           else random_state)
+    # stationary distribution
+    pi0 = beta / (alpha + beta)
+    pi1 = alpha / (alpha + beta)
 
-    # Compute stationary distribution pi satisfying pi = pi P, sum(pi)=1.
-    # Solve (P^T - I)^T * pi = 0 with constraint sum(pi)=1.
-    A = np.vstack([P.T - np.eye(2), np.ones((1, 2))])
-    b = np.array([0.0, 0.0, 1.0])
-    # Least-squares to be numerically stable
-    pi, *_ = np.linalg.lstsq(A, b, rcond=None)
-    # Numerical cleanup
-    pi = np.clip(pi, 0.0, 1.0)
-    pi /= pi.sum()
-
-    # Sample initial state from stationary distribution
+    # initialize state
     U = np.empty(n, dtype=int)
-    U[0] = rng.choice(2, p=pi)
+    U[0] = rng.choice([0, 1], p=[pi0, pi1])
 
-    # Evolve the chain
+    # simulate chain
     for t in range(1, n):
-        U[t] = rng.choice(2, p=P[U[t-1], :])
+        if U[t-1] == 0:
+            U[t] = rng.choice([0, 1], p=[1 - alpha, alpha])
+        else:
+            U[t] = rng.choice([0, 1], p=[beta, 1 - beta])
 
-    return U, pi
+    return U, (pi0, pi1)
