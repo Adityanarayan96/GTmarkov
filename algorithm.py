@@ -1,16 +1,31 @@
 # Functions to design testing matrices, compute test outcomes, and decode infection vectors
 
-def independent_testing(n, num_tests, testing_prob):
+import numpy as np
+
+def independent_testing(n, num_tests, testing_prob, seed=None):
     """
-    Create testing matrix X^{nxnum_tests} based on independent coding
-    parameters:
-    n: int
-        The number of individuals
-    num_tests: int
-        The number of tests to perform
-    testing_prob: float
-        The probability of including an individual in a test    
-    """    
+    Create testing matrix X^{n x num_tests} based on independent coding.
+
+    Each entry X[i,j] ~ Bernoulli(testing_prob), independently.
+
+    Parameters
+    ----------
+    n : int
+        The number of individuals.
+    num_tests : int
+        The number of tests to perform.
+    testing_prob : float
+        The probability of including an individual in a test.
+    seed : int or None
+        Random seed for reproducibility.
+
+    Returns
+    -------
+    testing_matrix : np.ndarray of shape (n, num_tests)
+        Binary matrix indicating which individuals are in which tests.
+    """
+    rng = np.random.default_rng(seed)
+    testing_matrix = rng.binomial(1, testing_prob, size=(n, num_tests))
     return testing_matrix
 
 def block_testing(n, num_tests, block_size):
