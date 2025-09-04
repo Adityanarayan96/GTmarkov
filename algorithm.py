@@ -118,13 +118,42 @@ def compute_test_outcomes(infection_vector, testing_matrix):
 
 def decoding(test_outcomes, testing_matrix, threshold):
     """
-    Decode the infection vector from the test outcomes and testing matrix
-    parameters:
-    test_outcomes: array-like of shape (num_tests,)
-        The test outcomes of 0's and 1's
-    testing_matrix: array-like of shape (n, num_tests)
-        The testing matrix of 0's and 1's
-    threshold: int
-        The threshold for decoding
+    Decode the infection vector from test outcomes and testing matrix.
+
+    Step 1 (COMP): If an item ever appears in a negative test, mark it non-infected (tilde u_i = 0).
+                   Otherwise tilde u_i = 1.
+    Step 2 (Threshold): For items with tilde u_i = 1, set uhat_i = 1 iff the number of tests
+                        it participates in X_i >= threshold; else 0.
+
+    Parameters
+    ----------
+    test_outcomes : array-like of shape (num_tests,)
+        Binary outcomes (0 = negative, 1 = positive).
+    testing_matrix : array-like of shape (n, num_tests)
+        Binary design matrix X.
+    threshold : int
+        Threshold γ for declaring infection (compare to row-sum X_i).
+
+    Returns
+    -------
+    decoded_infection_vector : np.ndarray of shape (n,), dtype=int
+        Estimated infection vector \hat{U}^n.
     """
-    return decoded_infection_vector
+    Y = np.asarray(test_outcomes, dtype=int).ravel()
+    X = np.asarray(testing_matrix, dtype=int)
+    if X.ndim != 2:
+        raise ValueError("testing_matrix must be 2D (n x num_tests).")
+    if X.shape[1] != Y.size:
+        raise ValueError("Mismatch: testing_matrix has %d columns but test_outcomes has length %d."
+                         % (X.shape[1], Y.size))
+
+    # Step 1: COMP — eliminate any item that appears in a negative test
+    neg_mask = (Y == 0)                    # tests that were negative
+    appears_in_any_negative = (X[:, neg_mask].sum(axis=1) > 0) if neg_mask.any() else np.zeros(X.shape[0], dtype=bool)
+    tilde_u = (~appears_in_any_negative).astype(int)  # 1 if not eliminated, else 0
+
+    # Step 2: threshold on total participations Xi
+    Xi = X.sum(axis=1)                     # number of tests each item participates in
+    uhat = ((tilde_u == 1) & (Xi >= threshold)).astype(int)
+
+    return uhat
