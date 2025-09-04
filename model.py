@@ -32,8 +32,8 @@ def simulate_markov(n, alpha, beta, seed=None):
     rng = np.random.default_rng(seed)
 
     # stationary distribution
-    pi0 = alpha / (alpha + beta)
-    pi1 = beta / (alpha + beta)
+    pi0 = beta / (alpha + beta)
+    pi1 = alpha / (alpha + beta)
 
     # initialize state
     U = np.empty(n, dtype=int)
